@@ -1,69 +1,96 @@
 from dataclasses import dataclass
 from abc import ABC, abstractmethod
-from typing import Self, override
+from datetime import date
+from typing import Self, override, TypedDict
+
+
+class DriverDict(TypedDict, total=False):
+    id_: int
+    first_name: str
+    last_name: str
+    registration_number: str
+
+
+class SpeedCameraDict(TypedDict, total=False):
+    id_: int
+    location: str
+    allowed_speed: int
+
+
+class OffenseDict(TypedDict, total=False):
+    id_: int
+    description: str
+    penalty_points: int
+    fine_amount: int
+
+
+class ViolationDict(TypedDict, total=False):
+    id_: int
+    violation_date: date
+    driver_id: int
+    speed_camera_id: int
+    offense_id: int
 
 
 @dataclass
-class Entity(ABC):
+class Entity[T](ABC):
     id_: int | None = None
 
     @classmethod
     @abstractmethod
-    def from_row(cls, *args: str) -> Self: # pragma: no cover
+    def from_row(cls, row: T) -> Self: # pragma: no cover
         pass
 
 
 @dataclass
-class SpeedCamera(Entity):
+class SpeedCamera(Entity[SpeedCameraDict]):
     location: str | None = None
     allowed_speed: int | None = None
 
     @classmethod
     @override
-    def from_row(cls, *args: str) -> Self:
+    def from_row(cls, row: SpeedCameraDict) -> Self:
         return cls(
-            id_=int(args[0]),
-            location=str(args[1]),
-            allowed_speed=int(args[2]),
+            id_=row["id_"],
+            location=row["location"],
+            allowed_speed=row["allowed_speed"],
         )
 
-
 @dataclass
-class Driver(Entity):
+class Driver(Entity[DriverDict]):
     first_name: str | None = None
     last_name: str | None = None
     registration_number: str | None = None
 
     @classmethod
     @override
-    def from_row(cls, *args: str) -> Self:
+    def from_row(cls, row: DriverDict) -> Self:
         return cls(
-            id_=int(args[0]),
-            first_name=str(args[1]),
-            last_name=str(args[2]),
-            registration_number=str(args[3])
+            id_=row["id_"],
+            first_name=row["first_name"],
+            last_name=row["last_name"],
+            registration_number=row["registration_number"],
         )
 
-
 @dataclass
-class Offense(Entity):
+class Offense(Entity[OffenseDict]):
     description: str | None = None
     penalty_points: int | None = None
     fine_amount: int | None = None
 
     @classmethod
     @override
-    def from_row(cls, *args: str) -> Self:
+    def from_row(cls, row: OffenseDict) -> Self:
         return cls(
-            id_=int(args[0]),
-            description=str(args[1]),
-            penalty_points=int(args[2]),
-            fine_amount=int(args[3]),
+            id_=row["id_"],
+            description=row["description"],
+            penalty_points=row["penalty_points"],
+            fine_amount=row["fine_amount"],
         )
 
 
 @dataclass
-class Violation(Entity):
+class Violation(Entity[ViolationDict]):
     violation_date: str | None = None
     driver_id: int | None = None
     speed_camera_id: int | None = None
@@ -71,11 +98,11 @@ class Violation(Entity):
 
     @classmethod
     @override
-    def from_row(cls, *args: str) -> Self:
+    def from_row(cls, row: ViolationDict) -> Self:
         return cls(
-            id_=int(args[0]),
-            violation_date=str(args[1]),
-            driver_id=int(args[2]),
-            speed_camera_id=int(args[3]),
-            offense_id=int(args[4]),
+            id_=row["id_"],
+            violation_date=row["violation_date"].isoformat() if row["violation_date"] else None,
+            driver_id=row["driver_id"],
+            speed_camera_id=row["speed_camera_id"],
+            offense_id=row["offense_id"],
         )

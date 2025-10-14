@@ -1,4 +1,5 @@
 from src.entity import Driver, Offense, Violation, SpeedCamera, Entity
+from mysql.connector.connection import MySQLCursor, MySQLConnection
 from src.database import with_db_connection, MySQLConnectionManager
 from typing import Type
 import inflection
@@ -8,22 +9,42 @@ class CrudRepository[T: Entity]:
     def __init__(self, connection_manager: MySQLConnectionManager, entity_type: Type[T]):
         self._connection_manager = connection_manager
         self._entity_type = entity_type
+        self._cursor: MySQLCursor
+        self._conn: MySQLConnection
 
     @with_db_connection
     def find_all(self) -> list[T]:
         sql = f"select * from {self._table_name()}"
         self._cursor.execute(sql)
-        return [self._entity_type.from_row(*row) for row in self._cursor.fetchall()]
+
+        if not self._cursor.description:
+            return [] #pragma: no cover
+
+        columns = [desc[0] for desc in self._cursor.description]
+
+        rows = self._cursor.fetchall()
+        if not rows:
+            return []
+
+        return [self._entity_type.from_row(self._convert_row_to_dict(columns, row)) for row in rows]
+
 
     @with_db_connection
     def find_by_id(self, item_id: int) -> T | None:
         sql = f'select * from {self._table_name()} where id_ = {item_id}'
         self._cursor.execute(sql)
+
+        if not self._cursor.description:
+            return None #pragma: no cover
+
         item = self._cursor.fetchone()
-        return self._entity_type.from_row(*item) if item else None
+        if item:
+            columns = [desc[0] for desc in self._cursor.description]
+            return self._entity_type.from_row(self._convert_row_to_dict(columns, item))
+        return None
 
     @with_db_connection
-    def insert(self, item: T) -> int:
+    def insert(self, item: T) -> int | None:
         sql = (f'insert into {self._table_name()} '
                f'({self._column_names_for_insert()}) '
                f'values ({self._column_values_for_insert(item)})')
@@ -78,6 +99,10 @@ class CrudRepository[T: Entity]:
 
     def _values_for_insert_many(self, items: list[T]) -> list[str]:
         return [f"({self._column_values_for_insert(item)})" for item in items]
+
+    @staticmethod
+    def _convert_row_to_dict(columns: list[str], row: tuple) -> dict:
+        return {columns[i]: row[i] for i in range (len(columns))}
 
 
 class DriverRepository(CrudRepository[Driver]):
