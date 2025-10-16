@@ -26,8 +26,11 @@ def main() -> None:
 
     service = ViolationService(driver_repository, speed_camera_repository, offense_repository, violation_repository)
     # service.add_driver(Driver(first_name='x', last_name='y', registration_number='xxx'))
-    # print(service.all_offenses_by_driver('xxxxxx'))
-    print(service.get_top_drivers_by_points())
+    print(service.get_offenses_by_driver('K123456'))
+    # print(service.get_top_drivers_by_points())
+
+    # print(service.get_camera_violations())
+    # print(service.get_summary_statistic())
 
     # speed_cameras = speed_camera_repository.find_all()
     # for speed_camera in speed_cameras:
