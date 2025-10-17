@@ -1,7 +1,7 @@
-from src.entity import Driver, Offense, Violation, SpeedCamera, Entity
+from src.entity import Driver, Offense, Violation, SpeedCamera, Entity, DriverDict
 from mysql.connector.connection import MySQLCursor, MySQLConnection
 from src.database import with_db_connection, MySQLConnectionManager
-from typing import Type
+from typing import Type, cast
 import inflection
 
 
@@ -63,9 +63,6 @@ class CrudRepository[T: Entity]:
     @with_db_connection
     def update(self, item_id: int, item: T) -> None:
         sql = f'update {self._table_name()} set {self._column_names_and_values_for_update(item)} where id_ = {item_id}'
-        print('---')
-        print(sql)
-        print('---')
         self._cursor.execute(sql)
 
     @with_db_connection
@@ -104,15 +101,37 @@ class CrudRepository[T: Entity]:
     def _convert_row_to_dict(columns: list[str], row: tuple) -> dict:
         return {columns[i]: row[i] for i in range (len(columns))}
 
+    @with_db_connection
+    def _execute_query(self, sql: str, params: tuple | None = None) -> list[dict]:
+        self._cursor.execute(sql, params or ())
+        if not self._cursor.description:
+            return []
+        columns = [desc[0] for desc in self._cursor.description]
+
+        rows = self._cursor.fetchall()
+        if not rows:
+            return []
+
+        return [self._convert_row_to_dict(columns, row) for row in rows]
+
 
 class DriverRepository(CrudRepository[Driver]):
     def __init__(self, connection_manager: MySQLConnectionManager):
         super().__init__(connection_manager, Driver)
 
 
+    def find_driver_by_registration_number(self, registration_number: str) -> Driver | None:
+        sql = f'select * from {self._table_name()} where registration_number = "{registration_number}"'
+        return self._execute_query(sql, (registration_number,))
+
+
 class OffenseRepository(CrudRepository[Offense]):
     def __init__(self, connection_manager: MySQLConnectionManager):
         super().__init__(connection_manager, Offense)
+
+class SpeedCameraRepository(CrudRepository[SpeedCamera]):
+    def __init__(self, connection_manager: MySQLConnectionManager):
+        super().__init__(connection_manager, SpeedCamera)
 
 
 class ViolationRepository(CrudRepository[Violation]):
@@ -120,6 +139,49 @@ class ViolationRepository(CrudRepository[Violation]):
         super().__init__(connection_manager, Violation)
 
 
-class SpeedCameraRepository(CrudRepository[SpeedCamera]):
-    def __init__(self, connection_manager: MySQLConnectionManager):
-        super().__init__(connection_manager, SpeedCamera)
+    def find_violations_with_offense_by_driver(self, registration_number: str | None) -> list[dict]:
+        sql = """
+        SELECT 
+            d.first_name,
+            d.last_name,
+            d.registration_number,
+            v.id_ as violation_id,
+            o.description,
+            o.penalty_points,
+            o.fine_amount
+        FROM violations v
+        JOIN drivers d ON v.driver_id = d.id_
+        JOIN offenses o ON v.offense_id = o.id_
+        WHERE d.registration_number = %s;
+        """
+
+        return self._execute_query(sql, (registration_number,))
+
+
+    def get_driver_points(self) -> list[dict]:
+        sql = """
+            SELECT d.id_, d.first_name, d.last_name, sum(o.penalty_points) as total_points FROM violations v 
+            JOIN offenses o ON v.offense_id = o.id_
+            JOIN drivers d ON v.driver_id = d.id_ 
+            GROUP BY d.id_, d.first_name, d.last_name
+            ORDER BY total_points DESC;
+        """
+
+        return self._execute_query(sql)
+
+
+    def get_most_popular_speed_camera(self) -> list[dict]:
+        sql = """
+         SELECT 
+            s.location, count(v.speed_camera_id) as total_count 
+         FROM speed_cameras s 
+         LEFT JOIN violations v ON v.speed_camera_id = s.id_ 
+         group by s.location, s.id_
+         order by total_count desc;
+        """
+
+        return self._execute_query(sql)
+
+
+
+
