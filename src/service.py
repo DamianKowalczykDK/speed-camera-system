@@ -1,7 +1,3 @@
-from collections import Counter
-from itertools import count
-
-from src.entity import Driver, Offense
 from src.repository import DriverRepository, SpeedCameraRepository, OffenseRepository, ViolationRepository
 from tests.conftest import violation_repository
 
@@ -19,57 +15,44 @@ class ViolationService:
         self.offense_repository = offense_repository
         self.violation_repository = violation_repository
 
-    def get_offenses_by_driver(self, driver_number_registration: str) -> str:
+    def get_offenses_by_driver(self, driver_number_registration: str) -> str | None:
         total_points = 0
         total_amount = 0
         result = []
-        driver = [d for d in self.driver_repository.find_all() if d.registration_number == driver_number_registration]
-        if not driver:
-            print(f'{driver_number_registration} is not registered')
-        for d in driver:
-            all_violations = self.violation_repository.find_all()
-            violation_for_driver = [v for v in all_violations if v.driver_id == d.id_]
-            for violation in violation_for_driver:
-                offense = self.offense_repository.find_by_id(violation.offense_id)
-                if offense:
-                    total_points += offense.penalty_points
-                    total_amount += offense.fine_amount
+        violation = self.violation_repository.find_violations_with_offense_by_driver(driver_number_registration)
+        if not violation:
+            print(f'Driver {driver_number_registration} has no violations')
+        for v in violation:
+            result.append(f"Driver name: {v['first_name']} {v['last_name']}\n"
+                          f"Description: {v['description']}\n"
+                          f"Points: {v['penalty_points']}\n"
+                          f"Amount: {v['fine_amount']}\n")
+            total_points += v['penalty_points']
+            total_amount += v['fine_amount']
 
-                    result.append(
-                        f'Driver name: {d.first_name} {d.last_name}\n'
-                        f'Description: {offense.description}\n'
-                        f'points: {offense.penalty_points}\n'
-                        f'fine amount: {offense.fine_amount}\n'
-                        )
-            result.append(f'Total points: {total_points}\nTotal amount: {total_amount}')
-
+        result.append(f'Total points: {total_points}\nTotal amount: {total_amount}')
         return '\n'.join(result)
 
-    def get_top_drivers_by_points(self) -> list[str]:
+
+    def get_top_drivers_by_points(self) -> str:
+        violation = self.violation_repository.get_driver_points()
         result = []
-        all_driver = self.driver_repository.find_all()
-        driver_points: dict[int, int] = {d.id_: 0 for d in all_driver}
-        all_violations = self.violation_repository.find_all()
-        for violation in all_violations:
-            offense = self.offense_repository.find_by_id(violation.offense_id)
-            if offense:
-                driver_points[violation.driver_id] += offense.penalty_points
-        for driver in all_driver:
-            total_points = driver_points.get(driver.id_, 0)
-            if driver_points[driver.id_] > 0:
-                result.append(f'Driver: {driver.first_name} {driver.last_name}, points: {total_points}')
+        if not violation:
+            print(f'No driver points')
+        for v in violation:
+            result.append(f"Driver name: {v['first_name']} {v['last_name']} has {v['total_points']} points")
+        return '\n'.join(result)
 
-        return sorted(result, reverse=True)
+    def get_speed_camera_statistic(self) -> dict[str, int]:
+        violation = self.violation_repository.get_most_popular_speed_camera()
+        if not violation:
+            print(f'Speed camera has no violations')
 
-    def get_camera_violations(self) -> dict[str, int]:
-        all_speed_cameras = self.speed_camera_repository.find_all()
-        all_violations = self.violation_repository.find_all()
-        best_speed_camera: dict[str, int] = {s.location: 0 for s in all_speed_cameras}
+        cameras: dict[str, int] = {}
+        for v in violation:
+            cameras[v['location']] = v['total_count']
 
-        counts = Counter(v.speed_camera_id for v in all_violations)
-        for camera in all_speed_cameras:
-            best_speed_camera[camera.location] += counts[camera.id_]
-        return best_speed_camera
+        return cameras
 
     def get_summary_statistic(self) -> str:
         driver_repository = self.driver_repository.find_all()
