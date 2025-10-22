@@ -23,15 +23,18 @@ class MySQLConnectionManager:
 
 
 def with_db_connection(func: Callable) -> Callable:
-    def wrapper(self, *args: Any, conn: MySQLConnection | None = None,  **kwargs: Any) -> Any:\
+    def wrapper(self, *args: Any,  **kwargs: Any) -> Any:
 
-        external_conn = conn is not None
-        if not external_conn:
-            conn = self._connection_manager.get_connection()
+        # external_conn = conn is not None
+        # if not external_conn:
+        #     conn = self._connection_manager.get_connection()
+        #
+        # conn = cast(MySQLConnection, conn)
 
-        conn = cast(MySQLConnection, conn)
-
-        with conn.cursor() as cursor:
+        with (
+            self._connection_manager.get_connection() as conn,
+            conn.cursor() as cursor
+        ):
             try:
                 self._conn = conn
                 self._cursor = cursor
