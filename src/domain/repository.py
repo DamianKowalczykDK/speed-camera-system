@@ -1,11 +1,9 @@
-from src.entity import Driver, Offense, Violation, SpeedCamera, Entity
-from src.database import with_db_connection, MySQLConnectionManager
+from src.domain.typed_dict import DriverOffensesDict, TopDriverDict, PopularSpeedCameraDict, SummaryStatisticDict
+from src.database.connection import MySQLConnectionManager, with_db_connection
+from src.domain.entity import Driver, Offense, Violation, SpeedCamera, Entity
 from mysql.connector.connection import MySQLCursor, MySQLConnection
 from typing import Type, cast
-
 import inflection
-
-from src.typed_dict import DriverOffensesDict, TopDriverDict, PopularSpeedCameraDict, SummaryStatisticDict
 
 
 class CrudRepository[T: Entity]:

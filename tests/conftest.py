@@ -1,13 +1,13 @@
-from typing import Generator
-
-from src.entity import Driver, SpeedCamera, Offense
-from src.repository import DriverRepository, SpeedCameraRepository, ViolationRepository, OffenseRepository
-from src.execute_sql_file import SqlFileExecutor
+from src.domain.repository import DriverRepository, SpeedCameraRepository, ViolationRepository, OffenseRepository
+from src.domain.entity import Driver, SpeedCamera, Offense
+from src.database.connection import MySQLConnectionManager
+from src.database.execute_sql_file import SqlFileExecutor
 from testcontainers.mysql import MySqlContainer
-from src.database import MySQLConnectionManager
 from urllib.parse import urlparse
+from typing import Generator
 import pytest
 import os
+
 
 @pytest.fixture
 def driver_1() -> Driver:

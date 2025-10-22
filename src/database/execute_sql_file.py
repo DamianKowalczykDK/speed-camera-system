@@ -1,4 +1,4 @@
-from src.database import MySQLConnectionManager, with_db_connection
+from src.database.connection import MySQLConnectionManager, with_db_connection
 from mysql.connector.connection import MySQLCursor, MySQLConnection
 from mysql.connector import Error
 

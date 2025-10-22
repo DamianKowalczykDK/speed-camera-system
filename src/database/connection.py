@@ -1,5 +1,5 @@
 from mysql.connector import pooling, MySQLConnection
-from typing import Callable, Any
+from typing import Callable, Any, cast
 from dotenv import load_dotenv
 import os
 
@@ -23,11 +23,15 @@ class MySQLConnectionManager:
 
 
 def with_db_connection(func: Callable) -> Callable:
-    def wrapper(self, *args: Any, **kwargs: Any) -> Any:
-        with (
-            self._connection_manager.get_connection() as conn,
-            conn.cursor() as cursor
-        ):
+    def wrapper(self, *args: Any, conn: MySQLConnection | None = None,  **kwargs: Any) -> Any:\
+
+        external_conn = conn is not None
+        if not external_conn:
+            conn = self._connection_manager.get_connection()
+
+        conn = cast(MySQLConnection, conn)
+
+        with conn.cursor() as cursor:
             try:
                 self._conn = conn
                 self._cursor = cursor

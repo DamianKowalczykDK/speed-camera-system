@@ -1,7 +1,7 @@
-from src.repository import DriverRepository, SpeedCameraRepository, ViolationRepository, OffenseRepository
-from src.entity import Driver, SpeedCamera, Offense, Violation
-from src.execute_sql_file import SqlFileExecutor
-from src.database import MySQLConnectionManager
+from src.domain.repository import DriverRepository, SpeedCameraRepository, ViolationRepository, OffenseRepository
+from src.domain.entity import Driver, SpeedCamera, Offense, Violation
+from src.database.execute_sql_file import SqlFileExecutor
+from src.database.connection import MySQLConnectionManager
 from mysql.connector import Error
 import pytest
 import os

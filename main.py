@@ -1,12 +1,11 @@
-from src.database import MySQLConnectionManager
-from src.execute_sql_file import SqlFileExecutor
-from src.repository import (
+from src.database.connection import MySQLConnectionManager
+from src.domain.repository import (
     DriverRepository,
     SpeedCameraRepository,
     ViolationRepository,
     OffenseRepository
 )
-from src.service import ViolationService
+from src.service.violation_service import ViolationService
 
 
 def main() -> None:
@@ -43,17 +42,6 @@ def main() -> None:
     service4 = service.get_generate_report()
     for driver_offense in service4:
         print(driver_offense)
-
-
-
-
-
-
-
-
-
-
-    # print(service.get_summary_statistic())
 
 
 if __name__ == '__main__':
