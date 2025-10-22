@@ -1,8 +1,11 @@
-from src.entity import Driver, Offense, Violation, SpeedCamera, Entity, DriverDict
-from mysql.connector.connection import MySQLCursor, MySQLConnection
+from src.entity import Driver, Offense, Violation, SpeedCamera, Entity
 from src.database import with_db_connection, MySQLConnectionManager
+from mysql.connector.connection import MySQLCursor, MySQLConnection
 from typing import Type, cast
+
 import inflection
+
+from src.typed_dict import DriverOffensesDict, TopDriverDict, PopularSpeedCameraDict, SummaryStatisticDict
 
 
 class CrudRepository[T: Entity]:
@@ -119,12 +122,6 @@ class DriverRepository(CrudRepository[Driver]):
     def __init__(self, connection_manager: MySQLConnectionManager):
         super().__init__(connection_manager, Driver)
 
-
-    def find_driver_by_registration_number(self, registration_number: str) -> Driver | None:
-        sql = f'select * from {self._table_name()} where registration_number = "{registration_number}"'
-        return self._execute_query(sql, (registration_number,))
-
-
 class OffenseRepository(CrudRepository[Offense]):
     def __init__(self, connection_manager: MySQLConnectionManager):
         super().__init__(connection_manager, Offense)
@@ -139,7 +136,7 @@ class ViolationRepository(CrudRepository[Violation]):
         super().__init__(connection_manager, Violation)
 
 
-    def find_violations_with_offense_by_driver(self, registration_number: str | None) -> list[dict]:
+    def find_violations_with_offense_by_driver(self, registration_number: str | None) -> list[DriverOffensesDict]:
         sql = """
         SELECT 
             d.first_name,
@@ -148,17 +145,19 @@ class ViolationRepository(CrudRepository[Violation]):
             v.id_ as violation_id,
             o.description,
             o.penalty_points,
-            o.fine_amount
+            o.fine_amount,
+            SUM(o.penalty_points) OVER (PARTITION BY d.id_) AS total_points,
+            SUM(o.fine_amount) OVER (PARTITION BY d.id_) AS total_amount
         FROM violations v
         JOIN drivers d ON v.driver_id = d.id_
         JOIN offenses o ON v.offense_id = o.id_
         WHERE d.registration_number = %s;
         """
 
-        return self._execute_query(sql, (registration_number,))
+        return [cast(DriverOffensesDict, row) for row in self._execute_query(sql, (registration_number,))]
 
 
-    def get_driver_points(self) -> list[dict]:
+    def get_driver_points(self) -> list[TopDriverDict]:
         sql = """
             SELECT d.id_, d.first_name, d.last_name, sum(o.penalty_points) as total_points FROM violations v 
             JOIN offenses o ON v.offense_id = o.id_
@@ -167,10 +166,10 @@ class ViolationRepository(CrudRepository[Violation]):
             ORDER BY total_points DESC;
         """
 
-        return self._execute_query(sql)
+        return [cast(TopDriverDict, row) for row in self._execute_query(sql)]
 
 
-    def get_most_popular_speed_camera(self) -> list[dict]:
+    def get_most_popular_speed_camera(self) -> list[PopularSpeedCameraDict]:
         sql = """
          SELECT 
             s.location, count(v.speed_camera_id) as total_count 
@@ -180,7 +179,23 @@ class ViolationRepository(CrudRepository[Violation]):
          order by total_count desc;
         """
 
-        return self._execute_query(sql)
+        return [cast(PopularSpeedCameraDict, row) for row in self._execute_query(sql)]
+
+    def summary_statistics(self) -> list[SummaryStatisticDict]:
+        sql = """
+        SELECT 
+            COUNT(v.driver_id) as total_drivers,
+            count(v.offense_id) as total_offenses,
+            sum(o.penalty_points)  as total_points,
+            round(avg(o.penalty_points), 2) as average_points,
+            sum(o.fine_amount) as total_fine_amount,
+            max(o.fine_amount) as max_fine_amount,
+            min(o.fine_amount) as min_fine_amount
+            
+        from violations v 
+        JOIN offenses o ON v.offense_id = o.id_
+        """
+        return [cast(SummaryStatisticDict, row) for row in self._execute_query(sql)]
 
 
 

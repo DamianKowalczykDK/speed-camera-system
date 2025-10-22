@@ -16,6 +16,15 @@ def test_insert_driver(driver_repository: DriverRepository, driver_1: Driver) ->
     assert retrieved_driver.last_name == driver_1.last_name
     assert retrieved_driver.registration_number == driver_1.registration_number
 
+def test_insert_offense(offense_repository: OffenseRepository, offense_1: Offense) -> None:
+    offense_id = offense_repository.insert(offense_1)
+    assert offense_id is not None
+
+    retrieved_offense = offense_repository.find_by_id(1)
+    assert retrieved_offense.description == offense_1.description
+    assert retrieved_offense.penalty_points == offense_1.penalty_points
+    assert retrieved_offense.fine_amount == offense_1.fine_amount
+
 def test_insert_driver_and_find_all(driver_repository: OffenseRepository, driver_1: Driver, clear_database) -> None:
     driver_id = driver_repository.insert(driver_1)
     assert driver_id is not None

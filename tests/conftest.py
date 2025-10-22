@@ -1,3 +1,5 @@
+from typing import Generator
+
 from src.entity import Driver, SpeedCamera, Offense
 from src.repository import DriverRepository, SpeedCameraRepository, ViolationRepository, OffenseRepository
 from src.execute_sql_file import SqlFileExecutor
@@ -27,7 +29,7 @@ def offense_1() -> Offense:
     return Offense(id_=1, description='Test', penalty_points=2, fine_amount=200)
 
 @pytest.fixture(scope='module')
-def mysql_container() -> MySqlContainer:
+def mysql_container() -> Generator[MySqlContainer]:
     with MySqlContainer('mysql:latest') as container:
         yield container
 

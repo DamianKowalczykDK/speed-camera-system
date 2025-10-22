@@ -22,9 +22,37 @@ def main() -> None:
     violation_repository = ViolationRepository(mysql_connection_manager)
 
     service = ViolationService(driver_repository, speed_camera_repository, offense_repository, violation_repository)
-    # print(service.get_offenses_by_driver('K123456'))
-    # print(service.get_top_drivers_by_points())
-    # print(service.get_speed_camera_statistic())
+    service1 = service.get_offenses_by_driver('K123456')
+    for driver_offense in service1:
+        print(driver_offense)
+
+    print('--------------------------------- [1] ---------------------------------')
+
+    service2 = service.get_top_drivers_by_points()
+    for driver_offense in service2:
+        print(driver_offense)
+
+    print('--------------------------------- [2] ---------------------------------')
+
+    service3 = service.get_speed_camera_statistic()
+    for driver_offense in service3:
+        print(driver_offense)
+
+    print('--------------------------------- [3] ---------------------------------')
+
+    service4 = service.get_generate_report()
+    for driver_offense in service4:
+        print(driver_offense)
+
+
+
+
+
+
+
+
+
+
     # print(service.get_summary_statistic())
 
 
