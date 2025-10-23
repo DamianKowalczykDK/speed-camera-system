@@ -1,6 +1,9 @@
 from src.domain.repository import DriverRepository, SpeedCameraRepository, OffenseRepository, ViolationRepository
 from src.service.dto import DriverOffensesDto, TopDriverDto, PopularSpeedCameraDto, SummaryStatisticDto
 from tests.conftest import violation_repository
+from src.config import logger
+
+
 
 
 class ViolationService:
@@ -21,7 +24,7 @@ class ViolationService:
         result: list[DriverOffensesDto] = []
         violation = self.violation_repository.find_violations_with_offense_by_driver(driver_number_registration)
         if not violation:
-            print(f'Driver {driver_number_registration} has no violations')
+            logger.info(f'Driver {driver_number_registration} has no violations')
         for v in violation:
             result.append(DriverOffensesDto.from_row(v))
 
@@ -32,7 +35,7 @@ class ViolationService:
         violation = self.violation_repository.get_driver_points()
         result: list[TopDriverDto] = []
         if not violation:
-            print(f'No driver points')
+            logger.info(f'No driver points')
         for v in violation:
             result.append(TopDriverDto.from_row(v))
         return result
@@ -42,7 +45,7 @@ class ViolationService:
         result = []
         violation = self.violation_repository.get_most_popular_speed_camera()
         if not violation:
-            print(f'Speed camera has no violations')
+            logger.info(f'Speed camera has no violations')
 
         for v in violation:
             result.append(PopularSpeedCameraDto.from_row(v))

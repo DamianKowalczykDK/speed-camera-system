@@ -1,6 +1,7 @@
 from src.database.connection import MySQLConnectionManager, with_db_connection
 from mysql.connector.connection import MySQLCursor, MySQLConnection
 from mysql.connector import Error
+from src.config import logger
 
 
 class SqlFileExecutor:
@@ -18,8 +19,8 @@ class SqlFileExecutor:
             for command in sql_commands.split(';'):
                 command = command.strip()
                 if command:
-                    print(f'Executing command: {command}')
+                    logger.info(f'Executing command: {command}')
                     self._cursor.execute(command)
         except Error as e:
-            print(f'Error while executing sql file: {e}')
+            logger.error(f'Error while executing sql file: {e}')
             raise e
