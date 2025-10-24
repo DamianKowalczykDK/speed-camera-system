@@ -5,7 +5,6 @@ import os
 
 load_dotenv()
 
-
 class MySQLConnectionManager:
     def __init__(self):
         self._pool = pooling.MySQLConnectionPool(
@@ -21,29 +20,31 @@ class MySQLConnectionManager:
     def get_connection(self) -> MySQLConnection:
         return self._pool.get_connection()
 
-
 def with_db_connection(func: Callable) -> Callable:
-    def wrapper(self, *args: Any,  **kwargs: Any) -> Any:
+    def wrapper(self, *args: Any, conn: MySQLConnection | None = None, **kwargs: Any) -> Any:
 
-        # external_conn = conn is not None
-        # if not external_conn:
-        #     conn = self._connection_manager.get_connection()
-        #
-        # conn = cast(MySQLConnection, conn)
+        external_conn = conn is not None
+        if not external_conn:
+            conn = self._connection_manager.get_connection()
 
-        with (
-            self._connection_manager.get_connection() as conn,
-            conn.cursor() as cursor
-        ):
+        conn = cast(MySQLConnection, conn)
+
+        with conn.cursor() as cursor:
             try:
                 self._conn = conn
                 self._cursor = cursor
                 result = func(self, *args, **kwargs)
-                self._conn.commit()
+
+                if not external_conn:
+                    self._conn.commit()
+
                 return result
             except Exception as e:
-                if self._conn:
+                if not external_conn and self._conn:
                     self._conn.rollback()
                 raise e
+            finally:
+                if not external_conn and conn:
+                    conn.close()
 
     return wrapper

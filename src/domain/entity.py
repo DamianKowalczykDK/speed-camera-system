@@ -1,5 +1,3 @@
-from datetime import date, datetime
-
 from src.domain.typed_dict import SpeedCameraDict, DriverDict, OffenseDict, ViolationDict
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
