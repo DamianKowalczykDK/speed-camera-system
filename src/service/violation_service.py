@@ -1,10 +1,7 @@
 from src.domain.repository import DriverRepository, SpeedCameraRepository, OffenseRepository, ViolationRepository
 from src.service.dto import DriverOffensesDto, TopDriverDto, PopularSpeedCameraDto, SummaryStatisticDto
-from tests.conftest import violation_repository
+from tests.test_domain.conftest import violation_repository
 from src.config import logger
-
-
-
 
 class ViolationService:
     def __init__(

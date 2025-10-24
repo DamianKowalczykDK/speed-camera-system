@@ -1,97 +1,17 @@
-import logging
-from typing import cast
-from unittest.mock import MagicMock, patch
-
-import pytest
-
-from src.domain.repository import DriverRepository, OffenseRepository, SpeedCameraRepository, ViolationRepository
-from src.domain.typed_dict import PopularSpeedCameraDict, TopDriverDict, DriverOffensesDict, SummaryStatisticDict, \
-    SpeedCameraDict
-from src.service.dto import PopularSpeedCameraDto
+from src.domain.typed_dict import PopularSpeedCameraDict, TopDriverDict, DriverOffensesDict, SummaryStatisticDict
 from src.service.violation_service import ViolationService
-
-
-@pytest.fixture
-def mock_driver_repository() -> MagicMock:
-    return MagicMock(spec=DriverRepository)
-@pytest.fixture
-def mock_offense_repository() -> MagicMock:
-    return MagicMock(spec=OffenseRepository)
-@pytest.fixture
-def mock_speed_camera_repository() -> MagicMock:
-    return MagicMock(spec=SpeedCameraRepository)
-@pytest.fixture
-def mock_violation_repository() -> MagicMock:
-    return MagicMock(spec=ViolationRepository)
-
-@pytest.fixture
-def mock_violation_service(
-        mock_driver_repository: MagicMock,
-        mock_offense_repository: MagicMock,
-        mock_speed_camera_repository: MagicMock,
-        mock_violation_repository: MagicMock
-) -> ViolationService:
-    return ViolationService(
-        driver_repository=mock_driver_repository,
-        offense_repository=mock_offense_repository,
-        speed_camera_repository=mock_speed_camera_repository,
-        violation_repository=mock_violation_repository
-    )
-
-@pytest.fixture
-def speed_camera_data_dict_1() -> PopularSpeedCameraDict:
-    return {
-        "location": 'Warshaw',
-        "total_count": 5
-    }
-
-@pytest.fixture
-def speed_camera_data_dict_2() -> PopularSpeedCameraDict:
-    return {
-        "location": 'Krakow',
-        "total_count": 3
-    }
-
-@pytest.fixture
-def driver_data_dict_1() -> TopDriverDict:
-    return {
-        'first_name': 'John',
-        'last_name': 'Doe',
-        'total_points': 7
-    }
-
-@pytest.fixture
-def driver_offense_data_dict_1() -> DriverOffensesDict:
-    return {
-        'first_name': 'John',
-        'last_name': 'Doe',
-        'description': 'Test',
-        'penalty_points': 1,
-        'fine_amount': 100,
-        'total_points': 1,
-        'total_amount': 1
-    }
-
-@pytest.fixture
-def summary_statistics_data_dict_1() -> SummaryStatisticDict:
-    return {
-        'total_drivers': 4,
-        'total_offenses': 4,
-        'total_points': 9,
-        'average_points': 2.25,
-        'total_fine_amount': 300,
-        'max_fine_amount': 200,
-        'min_fine_amount': 100,
-    }
+from unittest.mock import MagicMock
+import logging
+import pytest
 
 def test_get_speed_camera_statistic_returns_data(
         mock_violation_repository: MagicMock,
         mock_violation_service: ViolationService,
-        speed_camera_data_dict_1: PopularSpeedCameraDict,
-        speed_camera_data_dict_2: PopularSpeedCameraDict
+        popular_speed_camera_data_dict_1: PopularSpeedCameraDict,
+        popular_speed_camera_data_dict_2: PopularSpeedCameraDict
 ) -> None:
     mock_violation_repository.get_most_popular_speed_camera.return_value = [
-        speed_camera_data_dict_1, speed_camera_data_dict_2
+        popular_speed_camera_data_dict_1, popular_speed_camera_data_dict_2
     ]
     result = mock_violation_service.get_speed_camera_statistic()
     assert len(result) == 2
@@ -117,9 +37,9 @@ def test_get_speed_camera_statistic_if_not_data(
 def test_get_top_drivers_by_point_returns_data(
         mock_violation_repository: MagicMock,
         mock_violation_service: ViolationService,
-        driver_data_dict_1: TopDriverDict
+        top_driver_data_dict_1: TopDriverDict
 ) -> None:
-    mock_violation_repository.get_driver_points.return_value = [driver_data_dict_1]
+    mock_violation_repository.get_driver_points.return_value = [top_driver_data_dict_1]
     result = mock_violation_service.get_top_drivers_by_points()
     assert len(result) == 1
 

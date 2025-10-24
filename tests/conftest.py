@@ -1,12 +1,6 @@
-from src.domain.repository import DriverRepository, SpeedCameraRepository, ViolationRepository, OffenseRepository
+from src.domain.typed_dict import PopularSpeedCameraDict, TopDriverDict, DriverOffensesDict, SummaryStatisticDict
 from src.domain.entity import Driver, SpeedCamera, Offense
-from src.database.connection import MySQLConnectionManager
-from src.database.execute_sql_file import SqlFileExecutor
-from testcontainers.mysql import MySqlContainer
-from urllib.parse import urlparse
-from typing import Generator
 import pytest
-import os
 
 
 @pytest.fixture
@@ -28,55 +22,48 @@ def speed_camera_2() -> SpeedCamera:
 def offense_1() -> Offense:
     return Offense(id_=1, description='Test', penalty_points=2, fine_amount=200)
 
-@pytest.fixture(scope='module')
-def mysql_container() -> Generator[MySqlContainer]:
-    with MySqlContainer('mysql:latest') as container:
-        yield container
-
-@pytest.fixture(scope='module')
-def connection_manager(mysql_container: MySqlContainer) -> MySQLConnectionManager:
-    connection_url = mysql_container.get_connection_url()
-    parsed_url = urlparse(connection_url)
-
-    os.environ['DB_HOST'] = parsed_url.hostname
-    os.environ['DB_PORT'] = str(parsed_url.port)
-    os.environ['DB_USERNAME'] = parsed_url.username
-    os.environ['DB_PASSWORD'] = parsed_url.password
-    os.environ['DB_NAME'] = parsed_url.path[1:]
-    os.environ['DB_POOL_SIZE'] = '5'
-    return MySQLConnectionManager()
-
-@pytest.fixture(scope='module', autouse=True)
-def setup_database_schema(connection_manager: MySQLConnectionManager) -> None:
-    execute_sql = SqlFileExecutor(connection_manager)
-    execute_sql.execute_sql_file(os.path.join(os.path.dirname(__file__), '../sql/schema.sql'))
+@pytest.fixture
+def popular_speed_camera_data_dict_1() -> PopularSpeedCameraDict:
+    return {
+        "location": 'Warshaw',
+        "total_count": 5
+    }
 
 @pytest.fixture
-def driver_repository(connection_manager: MySQLConnectionManager) -> DriverRepository:
-    return DriverRepository(connection_manager)
+def popular_speed_camera_data_dict_2() -> PopularSpeedCameraDict:
+    return {
+        "location": 'Krakow',
+        "total_count": 3
+    }
 
 @pytest.fixture
-def speed_camera_repository(connection_manager: MySQLConnectionManager) -> SpeedCameraRepository:
-    return SpeedCameraRepository(connection_manager)
+def top_driver_data_dict_1() -> TopDriverDict:
+    return {
+        'first_name': 'John',
+        'last_name': 'Doe',
+        'total_points': 7
+    }
 
 @pytest.fixture
-def violation_repository(connection_manager: MySQLConnectionManager) -> ViolationRepository:
-    return ViolationRepository(connection_manager)
+def driver_offense_data_dict_1() -> DriverOffensesDict:
+    return {
+        'first_name': 'John',
+        'last_name': 'Doe',
+        'description': 'Test',
+        'penalty_points': 1,
+        'fine_amount': 100,
+        'total_points': 1,
+        'total_amount': 100
+    }
 
 @pytest.fixture
-def offense_repository(connection_manager: MySQLConnectionManager) -> OffenseRepository:
-    return OffenseRepository(connection_manager)
-
-@pytest.fixture
-def clear_database(connection_manager: MySQLConnectionManager) -> None:
-    with connection_manager.get_connection() as conn, conn.cursor() as cursor:
-        cursor.execute("SET FOREIGN_KEY_CHECKS = 0;")
-        cursor.execute("SHOW TABLES;")
-        tables = cursor.fetchall()
-
-        for (table_name,) in tables:
-            table_name_str = table_name.decode() if isinstance(table_name, bytes) else table_name
-            cursor.execute(f"TRUNCATE TABLE {table_name_str};")
-
-        cursor.execute("SET FOREIGN_KEY_CHECKS = 1;")
-        conn.commit()
+def summary_statistics_data_dict_1() -> SummaryStatisticDict:
+    return {
+        'total_drivers': 4,
+        'total_offenses': 4,
+        'total_points': 9,
+        'average_points': 2.25,
+        'total_fine_amount': 300,
+        'max_fine_amount': 200,
+        'min_fine_amount': 100,
+    }
