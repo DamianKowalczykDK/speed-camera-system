@@ -1,0 +1,39 @@
+[project]
+name = "src"
+version = "0.1.0"
+description = ""
+authors = [
+    {name = "Damian",email = "damiankowalczyk3688@gmail.com"}
+]
+readme = "README.md"
+requires-python = ">=3.13,<4.0"
+dependencies = [
+    "python-dotenv (>=1.1.1,<2.0.0)",
+    "mysql-connector-python (>=9.4.0,<10.0.0)",
+    "inflection (>=0.5.1,<0.6.0)"
+]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[dependency-groups]
+dev = [
+    "pytest (>=8.4.2,<9.0.0)",
+    "pytest-cov (>=7.0.0,<8.0.0)",
+    "testcontainers (>=4.13.2,<5.0.0)",
+    "mypy (>=1.18.2,<2.0.0)",
+    "poethepoet (>=0.37.0,<0.38.0)"
+]
+
+[tool.pytest.ini_options]
+filterwarnings = [
+    "ignore::DeprecationWarning:testcontainers.*",
+]
+[tool.poe.tasks]
+test = "pytest --cov=src --cov-report=html"
+check = "mypy ./src tests"
+
+[tool.mypy]
+ignore_missing_imports = true
