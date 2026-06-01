@@ -1,4 +1,13 @@
 services:
+  app:
+    build: .
+    depends_on:
+      - mysql
+    environment:
+      DB_HOST: mysql
+      DB_PORT: 3307
+
+
   mysql:
     image: mysql:latest
     volumes:
@@ -14,6 +23,9 @@ services:
       - '3307:3307'
     expose:
       - 3307
+
+
+
   mysql_test:
     image: mysql:latest
     volumes:
@@ -29,6 +41,7 @@ services:
       - '3308:3308'
     expose:
       - 3308
+
 volumes:
   mysql:
   mysql_test:

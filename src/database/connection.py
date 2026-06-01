@@ -5,6 +5,7 @@ import os
 
 load_dotenv()
 
+
 class MySQLConnectionManager:
     """Manages a pool of MySQL connections using mysql.connector.pooling.
 
@@ -24,13 +25,13 @@ class MySQLConnectionManager:
             DB_PORT: Database port (default: 3307).
         """
         self._pool = pooling.MySQLConnectionPool(
-            pool_name='localhost',
-            pool_size=int(os.getenv('DB_POOL_SIZE', 5)),
-            host=os.getenv('DB_HOST'),
-            database=os.getenv('DB_NAME'),
-            user=os.getenv('DB_USER'),
-            password=os.getenv('DB_PASSWORD'),
-            port=int(os.getenv('DB_PORT', 3307)),
+            pool_name="localhost",
+            pool_size=int(os.getenv("DB_POOL_SIZE", 5)),
+            host=os.getenv("DB_HOST"),
+            database=os.getenv("DB_NAME"),
+            user=os.getenv("DB_USER"),
+            password=os.getenv("DB_PASSWORD"),
+            port=int(os.getenv("DB_PORT", 3307)),
         )
 
     def get_connection(self) -> MySQLConnection:
@@ -56,7 +57,10 @@ def with_db_connection(func: Callable) -> Callable:
     Returns:
         Callable: The wrapped function with automatic connection and transaction handling.
     """
-    def wrapper(self, *args: Any, conn: MySQLConnection | None = None, **kwargs: Any) -> Any:
+
+    def wrapper(
+        self, *args: Any, conn: MySQLConnection | None = None, **kwargs: Any
+    ) -> Any:
         """Wrapper providing automatic connection handling for the decorated method."""
         external_conn = conn is not None
         if not external_conn:

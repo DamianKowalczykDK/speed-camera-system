@@ -11,6 +11,7 @@ class DriverDict(TypedDict, total=False):
         last_name (str): Driver's last name.
         registration_number (str): Vehicle registration number assigned to the driver.
     """
+
     id_: int
     first_name: str
     last_name: str
@@ -25,6 +26,7 @@ class SpeedCameraDict(TypedDict, total=False):
         location (str): Physical location or description of the camera placement.
         allowed_speed (int): Maximum legal speed (km/h) monitored by the camera.
     """
+
     id_: int
     location: str
     allowed_speed: int
@@ -39,6 +41,7 @@ class OffenseDict(TypedDict, total=False):
         penalty_points (int): Number of penalty points assigned for the offense.
         fine_amount (int): Monetary fine amount associated with the offense.
     """
+
     id_: int
     description: str
     penalty_points: int
@@ -55,6 +58,7 @@ class ViolationDict(TypedDict, total=False):
         speed_camera_id (int): ID of the speed camera that recorded the violation.
         offense_id (int): ID of the offense associated with the violation.
     """
+
     id_: int
     violation_date: date
     driver_id: int
@@ -75,6 +79,7 @@ class DriverOffensesDict(TypedDict, total=False):
         total_points (int): Total penalty points accumulated by the driver.
         total_amount (int): Total fine amount accumulated by the driver.
     """
+
     first_name: str
     last_name: str
     registration_number: str
@@ -97,6 +102,7 @@ class SummaryStatisticDict(TypedDict, total=False):
         max_fine_amount (int): Maximum fine value among all offenses.
         min_fine_amount (int): Minimum fine value among all offenses.
     """
+
     total_drivers: int
     total_offenses: int
     total_points: int
@@ -114,6 +120,7 @@ class TopDriverDict(TypedDict, total=False):
         last_name (str): Driver's last name.
         total_points (int): Total accumulated penalty points.
     """
+
     first_name: str
     last_name: str
     total_points: int
@@ -126,5 +133,6 @@ class PopularSpeedCameraDict(TypedDict, total=False):
         location (str): Speed camera location.
         total_count (int): Total number of violations recorded by the camera.
     """
+
     location: str
     total_count: int

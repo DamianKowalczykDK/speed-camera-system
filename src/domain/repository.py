@@ -1,4 +1,9 @@
-from src.domain.typed_dict import DriverOffensesDict, TopDriverDict, PopularSpeedCameraDict, SummaryStatisticDict
+from src.domain.typed_dict import (
+    DriverOffensesDict,
+    TopDriverDict,
+    PopularSpeedCameraDict,
+    SummaryStatisticDict,
+)
 from src.database.connection import MySQLConnectionManager, with_db_connection
 from src.domain.entity import Driver, Offense, Violation, SpeedCamera, Entity
 from mysql.connector.connection import MySQLCursor, MySQLConnection
@@ -19,7 +24,9 @@ class CrudRepository[T: Entity]:
         _conn (MySQLConnection): Active MySQL connection object.
     """
 
-    def __init__(self, connection_manager: MySQLConnectionManager, entity_type: Type[T]):
+    def __init__(
+        self, connection_manager: MySQLConnectionManager, entity_type: Type[T]
+    ):
         self._connection_manager = connection_manager
         self._entity_type = entity_type
         self._cursor: MySQLCursor
@@ -43,7 +50,10 @@ class CrudRepository[T: Entity]:
         if not rows:
             return []
 
-        return [self._entity_type.from_row(self._convert_row_to_dict(columns, row)) for row in rows]
+        return [
+            self._entity_type.from_row(self._convert_row_to_dict(columns, row))
+            for row in rows
+        ]
 
     @with_db_connection
     def find_by_id(self, item_id: int) -> T | None:
@@ -55,7 +65,7 @@ class CrudRepository[T: Entity]:
         Returns:
             T | None: The matching entity instance or None if not found.
         """
-        sql = f'select * from {self._table_name()} where id_ = {item_id}'
+        sql = f"select * from {self._table_name()} where id_ = {item_id}"
         self._cursor.execute(sql)
 
         if not self._cursor.description:
@@ -77,9 +87,11 @@ class CrudRepository[T: Entity]:
         Returns:
             int | None: The ID of the newly inserted record, if available.
         """
-        sql = (f'insert into {self._table_name()} '
-               f'({self._column_names_for_insert()}) '
-               f'values ({self._column_values_for_insert(item)})')
+        sql = (
+            f"insert into {self._table_name()} "
+            f"({self._column_names_for_insert()}) "
+            f"values ({self._column_values_for_insert(item)})"
+        )
         self._cursor.execute(sql)
         return self._cursor.lastrowid
 
@@ -93,8 +105,10 @@ class CrudRepository[T: Entity]:
         if not items:
             return
 
-        sql = (f'insert into {self._table_name()} ({self._column_names_for_insert()}) '
-               f'values {", ".join(self._values_for_insert_many(items))}')
+        sql = (
+            f'insert into {self._table_name()} ({self._column_names_for_insert()}) '
+            f'values {", ".join(self._values_for_insert_many(items))}'
+        )
         self._cursor.execute(sql)
 
     @with_db_connection
@@ -105,7 +119,7 @@ class CrudRepository[T: Entity]:
             item_id (int): ID of the record to update.
             item (T): Entity instance with new field values.
         """
-        sql = f'update {self._table_name()} set {self._column_names_and_values_for_update(item)} where id_ = {item_id}'
+        sql = f"update {self._table_name()} set {self._column_names_and_values_for_update(item)} where id_ = {item_id}"
         self._cursor.execute(sql)
 
     @with_db_connection
@@ -118,7 +132,7 @@ class CrudRepository[T: Entity]:
         Returns:
             int: The ID of the deleted record.
         """
-        sql = f'delete from {self._table_name()} where id_ = {item_id}'
+        sql = f"delete from {self._table_name()} where id_ = {item_id}"
         self._cursor.execute(sql)
         return item_id
 
@@ -136,7 +150,13 @@ class CrudRepository[T: Entity]:
         Returns:
             str: SQL-compatible list of column names (excluding `id_`).
         """
-        return ', '.join([field for field in self._entity_type.__annotations__.keys() if field != 'id_'])
+        return ", ".join(
+            [
+                field
+                for field in self._entity_type.__annotations__.keys()
+                if field != "id_"
+            ]
+        )
 
     def _column_values_for_insert(self, item: T) -> str:
         """Builds a comma-separated list of column values for an INSERT query.
@@ -147,13 +167,18 @@ class CrudRepository[T: Entity]:
         Returns:
             str: SQL-compatible string of values for insertion.
         """
-        fields = [field for field in self._entity_type.__annotations__.keys() if field != 'id_']
+        fields = [
+            field
+            for field in self._entity_type.__annotations__.keys()
+            if field != "id_"
+        ]
         values = [
-            str(getattr(item, field)) if isinstance(getattr(item, field), (int, float))
+            str(getattr(item, field))
+            if isinstance(getattr(item, field), (int, float))
             else f"'{getattr(item, field)}'"
             for field in fields
         ]
-        return ', '.join(values)
+        return ", ".join(values)
 
     def _column_names_and_values_for_update(self, item: T) -> str:
         """Creates a SQL-compatible `SET` clause for an UPDATE query.
@@ -164,12 +189,14 @@ class CrudRepository[T: Entity]:
         Returns:
             str: SQL string with column-value assignments.
         """
-        return ', '.join([
-            f"{field} = {str(getattr(item, field)) if isinstance(getattr(item, field), (int, float))
+        return ", ".join(
+            [
+                f"{field} = {str(getattr(item, field)) if isinstance(getattr(item, field), (int, float))
             else f"'{getattr(item, field)}'"}"
-            for field in self._entity_type.__annotations__.keys()
-            if field != 'id_'
-        ])
+                for field in self._entity_type.__annotations__.keys()
+                if field != "id_"
+            ]
+        )
 
     def _values_for_insert_many(self, items: list[T]) -> list[str]:
         """Generates multiple value tuples for batch inserts.
@@ -245,7 +272,9 @@ class ViolationRepository(CrudRepository[Violation]):
     def __init__(self, connection_manager: MySQLConnectionManager):
         super().__init__(connection_manager, Violation)
 
-    def find_violations_with_offense_by_driver(self, registration_number: str | None) -> list[DriverOffensesDict]:
+    def find_violations_with_offense_by_driver(
+        self, registration_number: str | None
+    ) -> list[DriverOffensesDict]:
         """Fetches all offenses committed by a specific driver, including totals.
 
         Args:
@@ -268,7 +297,10 @@ class ViolationRepository(CrudRepository[Violation]):
                        JOIN offenses o ON v.offense_id = o.id_
               WHERE d.registration_number = %s; 
               """
-        return [cast(DriverOffensesDict, row) for row in self._execute_query(sql, (registration_number,))]
+        return [
+            cast(DriverOffensesDict, row)
+            for row in self._execute_query(sql, (registration_number,))
+        ]
 
     def get_driver_points(self) -> list[TopDriverDict]:
         """Calculates total penalty points for each driver.

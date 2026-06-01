@@ -1,4 +1,9 @@
-from src.domain.typed_dict import SpeedCameraDict, DriverDict, OffenseDict, ViolationDict
+from src.domain.typed_dict import (
+    SpeedCameraDict,
+    DriverDict,
+    OffenseDict,
+    ViolationDict,
+)
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import Self, override
@@ -160,7 +165,9 @@ class Violation(Entity[ViolationDict]):
         """
         return cls(
             id_=row["id_"],
-            violation_date=row["violation_date"].isoformat() if "violation_date" in row else None,
+            violation_date=row["violation_date"].isoformat()
+            if "violation_date" in row
+            else None,
             driver_id=row["driver_id"],
             speed_camera_id=row["speed_camera_id"],
             offense_id=row["offense_id"],

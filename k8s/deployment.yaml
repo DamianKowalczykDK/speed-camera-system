@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app
+  namespace: speed-camera
+spec:
+  replicas: 2
+
+  selector:
+    matchLabels:
+      app: app
+
+  template:
+    metadata:
+      labels:
+        app: app
+
+    spec:
+      containers:
+        - name: app
+          image: speed-camera:3.0
+          imagePullPolicy: Never
+
+
+          envFrom:
+            - configMapRef:
+                name: app-configmap
+            - secretRef:
+                name: app-secret
+
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "50m"
+            limits:
+              memory: "128Mi"
+              cpu: "200m"
