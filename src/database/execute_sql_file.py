@@ -37,15 +37,15 @@ class SqlFileExecutor:
         Raises:
             mysql.connector.Error: If any SQL command fails to execute.
         """
-        with open(file_path, 'r') as sql_file:
+        with open(file_path, "r") as sql_file:
             sql_commands = sql_file.read()
 
         try:
-            for command in sql_commands.split(';'):
+            for command in sql_commands.split(";"):
                 command = command.strip()
                 if command:
-                    logger.info(f'Executing command: {command}')
+                    logger.info(f"Executing command: {command}")
                     self._cursor.execute(command)
         except Error as e:
-            logger.error(f'Error while executing sql file: {e}')
+            logger.error(f"Error while executing sql file: {e}")
             raise e

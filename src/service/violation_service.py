@@ -33,7 +33,7 @@ class ViolationService:
         driver_repository: DriverRepository,
         speed_camera_repository: SpeedCameraRepository,
         offense_repository: OffenseRepository,
-        violation_repository: ViolationRepository
+        violation_repository: ViolationRepository,
     ):
         """Initialize the ViolationService with repository dependencies.
 
@@ -48,7 +48,9 @@ class ViolationService:
         self.offense_repository = offense_repository
         self.violation_repository = violation_repository
 
-    def get_offenses_by_driver(self, driver_number_registration: str) -> list[DriverOffensesDto]:
+    def get_offenses_by_driver(
+        self, driver_number_registration: str
+    ) -> list[DriverOffensesDto]:
         """Retrieve all offenses committed by a specific driver.
 
         Fetches violation and offense data for a given driver registration number
@@ -61,9 +63,11 @@ class ViolationService:
             list[DriverOffensesDto]: A list of offenses associated with the driver.
         """
         result: list[DriverOffensesDto] = []
-        violation = self.violation_repository.find_violations_with_offense_by_driver(driver_number_registration)
+        violation = self.violation_repository.find_violations_with_offense_by_driver(
+            driver_number_registration
+        )
         if not violation:
-            logger.info(f'Driver {driver_number_registration} has no violations')
+            logger.info(f"Driver {driver_number_registration} has no violations")
         for v in violation:
             result.append(DriverOffensesDto.from_row(v))
 
@@ -81,7 +85,7 @@ class ViolationService:
         violation = self.violation_repository.get_driver_points()
         result: list[TopDriverDto] = []
         if not violation:
-            logger.info('No driver points')
+            logger.info("No driver points")
         for v in violation:
             result.append(TopDriverDto.from_row(v))
         return result
@@ -97,7 +101,7 @@ class ViolationService:
         result = []
         violation = self.violation_repository.get_most_popular_speed_camera()
         if not violation:
-            logger.info(f'Speed camera has no violations')
+            logger.info("Speed camera has no violations")
 
         for v in violation:
             result.append(PopularSpeedCameraDto.from_row(v))
